@@ -46,6 +46,8 @@ var fileStorage = multer.diskStorage({
 
 var fileUpload = multer({ storage: fileStorage });
 
+const isArray = (value) => Array.isArray(value);
+
 const postFilesUpload = (req, res, next) => {
   const formData = formidable({
     uploadDir: "./public/postImages",
@@ -57,11 +59,20 @@ const postFilesUpload = (req, res, next) => {
       throw err;
       return;
     } else {
-      const filenames = (files.files || []).map((file) => ({
+      const attachments = files.attachments;
+      const images = files.images;
+      const attachmentNames = (
+        attachments ? (isArray(attachments) ? attachments : [attachments]) : []
+      ).map((file) => ({
         filename: file.path.split("\\")[2],
         originalFilename: file.name,
       }));
-      req.files = filenames;
+      console.log("files", files.attachments, files.images);
+      const imageNames = (
+        images ? (isArray(images) ? images : [images]) : []
+      ).map((file) => file.path.split("\\")[2]);
+      req.attachmentNames = attachmentNames;
+      req.imageNames = imageNames;
       req.body = fields;
       next();
     }
@@ -99,6 +110,7 @@ router.get("/seeNotifications", notificationController.seeNotifications);
 router.post("/conversations", conversationController.startConversation);
 router.get("/conversations", conversationController.getConversationsOfUser);
 router.get("/conversations/:id", conversationController.getConversationById);
+router.post("/conversations/more", conversationController.fetchMorePeople);
 
 router.get("/logout", userController.logout);
 

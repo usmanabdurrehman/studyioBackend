@@ -12,7 +12,8 @@ module.exports = {
       userId: id,
       comments: [],
       likes: [],
-      files: req.files,
+      files: req.attachmentNames,
+      images: req.imageNames,
     });
     newPost
       .save()
@@ -23,6 +24,7 @@ module.exports = {
         });
       })
       .catch((err) => {
+        console.log("err", err);
         return res.send({
           status: false,
           msg: UNEXPECTED_ERROR,

@@ -23,6 +23,7 @@ const postSchema = new mongoose.Schema(
     comments: [commentSchema],
     likes: [String],
     files: [fileSchema],
+    images: [String],
   },
   { timestamps: true }
 );

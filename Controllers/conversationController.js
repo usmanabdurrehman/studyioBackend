@@ -1,4 +1,4 @@
-let { Conversation } = require("../Models");
+let { Conversation, User } = require("../Models");
 
 const UNEXPECTED_ERROR = "Sorry, Something happened unexpectedly";
 const ObjectId = require("mongoose").Types.ObjectId;
@@ -62,12 +62,6 @@ module.exports = {
           }))[0],
         });
       })
-      .then((conversation) => {
-        res.send({
-          status: true,
-          conversation,
-        });
-      })
       .catch((err) => {
         return res.send({
           status: false,
@@ -76,8 +70,13 @@ module.exports = {
       });
   },
   getConversationsOfUser: (req, res) => {
-    const { _id } = req.user;
+    const { _id: id } = req.user;
     Conversation.aggregate([
+      {
+        $match: {
+          participants: ObjectId(id),
+        },
+      },
       {
         $lookup: {
           from: "users",
@@ -101,6 +100,44 @@ module.exports = {
             ),
           })),
         });
+      })
+      .catch((err) => {
+        return res.send({
+          status: false,
+          msg: UNEXPECTED_ERROR,
+        });
+      });
+  },
+  fetchMorePeople: (req, res) => {
+    let { name } = req.body;
+    const { _id } = req.user;
+    Conversation.find({ participants: ObjectId(_id) })
+      .then((conversations) => {
+        const idsOfContacts = [
+          ...new Set(
+            conversations.reduce((acc, val) => {
+              return [...acc, ...val.participants];
+            }, [])
+          ),
+        ];
+        User.find(
+          {
+            $and: [
+              { name: new RegExp(name, "i") },
+              { _id: { $nin: idsOfContacts } },
+            ],
+          },
+          "_id name profileImage"
+        )
+          .then((users) => {
+            return res.send(users);
+          })
+          .catch((err) => {
+            return res.send({
+              status: false,
+              msg: UNEXPECTED_ERROR,
+            });
+          });
       })
       .catch((err) => {
         return res.send({
