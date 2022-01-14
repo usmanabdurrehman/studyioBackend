@@ -13,18 +13,15 @@ mongoose
     console.log("MongoDB connected");
 
     io.use((socket, next) => {
-      console.log("lmao son");
       next();
     });
 
     io.use((socket, next) => {
       var cookief = socket.handshake.headers.cookie;
       var cookies = cookie.parse(cookief);
-      console.log(cookies.token);
       if (cookies.token) {
         jwt.verify(cookies.token, "sdjsilciur", (err, decoded) => {
           if (err) return next(new Error("User is not logged in"));
-          console.log(decoded.user);
           socket.user = decoded.user;
           return next();
         });
@@ -41,7 +38,7 @@ mongoose
         socket.join(data.id);
       });
       socket.on("leaveRoom", (data) => {
-        console.log(`User leaved room with id ${data.id}`);
+        console.log(`User left room with id ${data.id}`);
         socket.leave(data.id);
       });
 
@@ -51,7 +48,9 @@ mongoose
 
       socket.on("message", ({ conversationId, message }) => {
         Conversation.findByIdAndUpdate(conversationId, {
-          $push: { messages: { text: message, sentBy: socket.user._id } },
+          $push: {
+            messages: { text: message, sentBy: socket.user._id, seen: false },
+          },
         }).then(() => {
           io.to(conversationId).emit("message_change", {
             text: message,
@@ -65,7 +64,6 @@ mongoose
         Notification.watch()
           .on("change", (change) => {
             if (change.operationType == "insert") {
-              console.log("insert event triggered on notification");
               socket
                 .to(change.fullDocument.reciever.toString())
                 .emit("changes", JSON.stringify(change.fullDocument));

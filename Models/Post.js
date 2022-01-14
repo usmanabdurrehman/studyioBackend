@@ -24,6 +24,7 @@ const postSchema = new mongoose.Schema(
     likes: [String],
     files: [fileSchema],
     images: [String],
+    hidden: Boolean,
   },
   { timestamps: true }
 );

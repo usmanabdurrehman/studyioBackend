@@ -19,7 +19,6 @@ module.exports = {
               postId: ObjectId(postId),
               seen: false,
             });
-            console.log("notifcation", newNotification);
             newNotification
               .save()
               .then(() => {

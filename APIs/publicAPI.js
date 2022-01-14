@@ -1,23 +1,27 @@
 const router = require("express").Router();
-
-let multer = require("multer");
+const formidable = require("formidable");
 
 let { userController } = require("../Controllers");
 
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./public/profileImages");
-  },
-  filename: function (req, file, cb) {
-    let [filename, ext] = file.originalname.split(".");
-    req.filename = `${req.body.email}.${ext}`;
-    cb(null, req.filename);
-  },
-});
-
-var upload = multer({ storage: storage });
+const profilePicUpload = (req, res, next) => {
+  const formData = formidable({
+    uploadDir: "./public/profileImages",
+    keepExtensions: true,
+  });
+  formData.parse(req, (err, fields, files) => {
+    if (err) {
+      throw err;
+      return;
+    } else {
+      const image = files.image;
+      req.image = image.path.split("\\")[2];
+      req.body = fields;
+      next();
+    }
+  });
+};
 
 router.post("/signin", userController.signin);
-router.post("/signup", upload.any(), userController.signup);
+router.post("/signup", profilePicUpload, userController.signup);
 
 module.exports = router;

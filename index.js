@@ -1,5 +1,4 @@
 const cors = require("cors");
-const session = require("express-session");
 const path = require("path");
 const db = require("./config/dbconfig");
 

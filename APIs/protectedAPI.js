@@ -1,11 +1,5 @@
-const fs = require("fs");
 const formidable = require("formidable");
 const router = require("express").Router();
-
-let { User, Post, Notification } = require("../Models");
-
-const UNEXPECTED_ERROR = "Sorry, Something happened unexpectedly";
-const ObjectId = require("mongoose").Types.ObjectId;
 
 const {
   commentController,
@@ -16,35 +10,7 @@ const {
   userController,
 } = require("../Controllers");
 
-let multer = require("multer");
 const conversationController = require("../Controllers/conversationController");
-
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./public/profileImages");
-  },
-  filename: function (req, file, cb) {
-    let [filename, ext] = file.originalname.split(".");
-    req.filename = `${req.user.email}.${ext}`;
-    cb(null, req.filename);
-  },
-});
-
-var upload = multer({ storage: storage });
-
-var fileStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./public/postImages");
-  },
-  filename: function (req, file, cb) {
-    let [filename, ext] = file.originalname.split(".");
-    const id = Date.now();
-    req.filename = `${id}.${ext}`;
-    cb(null, req.filename);
-  },
-});
-
-var fileUpload = multer({ storage: fileStorage });
 
 const isArray = (value) => Array.isArray(value);
 
@@ -67,7 +33,6 @@ const postFilesUpload = (req, res, next) => {
         filename: file.path.split("\\")[2],
         originalFilename: file.name,
       }));
-      console.log("files", files.attachments, files.images);
       const imageNames = (
         images ? (isArray(images) ? images : [images]) : []
       ).map((file) => file.path.split("\\")[2]);
@@ -79,7 +44,30 @@ const postFilesUpload = (req, res, next) => {
   });
 };
 
+const profilePicUpload = (req, res, next) => {
+  const formData = formidable({
+    uploadDir: "./public/profileImages",
+    keepExtensions: true,
+  });
+  formData.parse(req, (err, fields, files) => {
+    if (err) {
+      throw err;
+      return;
+    } else {
+      const image = files.image;
+      req.image = image.path.split("\\")[2];
+      req.body = fields;
+      next();
+    }
+  });
+};
+
 router.post("/posts", postFilesUpload, postsController.addPost);
+router.delete("/posts", postsController.deletePost);
+router.put("/posts", postFilesUpload, postsController.updatePost);
+
+router.put("/hidePost", postsController.hidePost);
+router.put("/unhidePost", postsController.unhidePost);
 router.get("/timelinePosts", postsController.getTimelinePosts);
 router.get("/profile/:id", postsController.getProfileInformation);
 router.get("/post/:id", postsController.getPostById);
@@ -96,7 +84,7 @@ router.delete("/follow", followController.unfollow);
 router.post("/fetchNames", userController.fetchNames);
 router.post(
   "/updateProfileImage",
-  upload.any(),
+  profilePicUpload,
   userController.updateProfileImage
 );
 
@@ -111,6 +99,15 @@ router.post("/conversations", conversationController.startConversation);
 router.get("/conversations", conversationController.getConversationsOfUser);
 router.get("/conversations/:id", conversationController.getConversationById);
 router.post("/conversations/more", conversationController.fetchMorePeople);
+router.get(
+  "/getAllConversationsUnseenMessagesCount",
+  conversationController.getAllConversationsUnseenMessagesCount
+);
+router.post(
+  "/getConversationsUnseenMessagesCountById",
+  conversationController.getConversationsUnseenMessagesCountById
+);
+router.post("/seeConversation", conversationController.seeConversation);
 
 router.get("/logout", userController.logout);
 

@@ -1,6 +1,6 @@
-let { User, Post, Notification } = require("../Models");
+let { User } = require("../Models");
 
-const UNEXPECTED_ERROR = "Sorry, Something happened unexpectedly";
+const { UNEXPECTED_ERROR, ERROR, SUCCESS } = require("../constants");
 const ObjectId = require("mongoose").Types.ObjectId;
 
 const jwt = require("jsonwebtoken");
@@ -8,11 +8,12 @@ const jwt = require("jsonwebtoken");
 module.exports = {
   signup: (req, res) => {
     let { name, email, password } = req.body;
+    console.log(req.body);
     const newUser = new User({
       name,
       email,
       password,
-      profileImage: req.filename,
+      profileImage: req.image,
       followers: [],
       following: [],
     });
@@ -21,7 +22,10 @@ module.exports = {
         if (user) {
           return res.send({
             status: false,
-            msg: `User Already exists with the email: ${email}`,
+            alert: {
+              type: ERROR,
+              msg: `User Already exists with the email: ${email}`,
+            },
           });
         } else {
           newUser
@@ -29,22 +33,19 @@ module.exports = {
             .then(() => {
               return res.send({
                 status: true,
-                msg: "Account Successfully made. You can now sign in",
+                alert: {
+                  type: SUCCESS,
+                  msg: "Account Successfully made. You can now sign in",
+                },
               });
             })
             .catch((err) => {
-              return res.send({
-                status: false,
-                msg: UNEXPECTED_ERROR,
-              });
+              return res.send(UNEXPECTED_ERROR);
             });
         }
       })
       .catch((err) => {
-        res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
-        });
+        res.send(UNEXPECTED_ERROR);
       });
   },
   signin: (req, res) => {
@@ -59,6 +60,9 @@ module.exports = {
             res.cookie("token", token, {
               secure: process.env.NODE_ENV !== "development",
               httpOnly: true,
+              expires: new Date(
+                Date.now() + (rememberMe ? 30 * 24 * 3600000 : 24 * 3600000)
+              ),
             });
             return res.send({
               auth: true,
@@ -68,21 +72,21 @@ module.exports = {
           } else {
             return res.send({
               auth: false,
-              msg: "The password entered is incorrect",
+              alert: { type: ERROR, msg: "The password entered is incorrect" },
             });
           }
         } else {
           return res.send({
             auth: false,
-            msg: "There is no user registered with this email",
+            alert: {
+              type: ERROR,
+              msg: "There is no user registered with this email",
+            },
           });
         }
       })
       .catch((err) => {
-        return res.send({
-          auth: false,
-          msg: UNEXPECTED_ERROR,
-        });
+        return res.send(UNEXPECTED_ERROR);
       });
   },
   logout: (req, res) => {
@@ -108,28 +112,21 @@ module.exports = {
         return res.send(users);
       })
       .catch((err) => {
-        console.log(err);
-        return res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
-        });
+        return res.send(UNEXPECTED_ERROR);
       });
   },
   updateProfileImage: (req, res) => {
     let { _id, profileImage } = req.user;
     User.findByIdAndUpdate(
       _id,
-      { profileImage: req.filename || profileImage },
+      { profileImage: req.image || profileImage },
       { new: true }
     )
       .then((user) => {
         return res.send({ status: true, user });
       })
       .catch((err) => {
-        return res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
-        });
+        return res.send(UNEXPECTED_ERROR);
       });
   },
 };

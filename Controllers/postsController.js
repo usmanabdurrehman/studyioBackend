@@ -1,7 +1,7 @@
-let { User, Post, Notification } = require("../Models");
+const { User, Post, Notification } = require("../Models");
 
-const UNEXPECTED_ERROR = "Sorry, Something happened unexpectedly";
 const ObjectId = require("mongoose").Types.ObjectId;
+const { SUCCESS, UNEXPECTED_ERROR } = require("../constants");
 
 module.exports = {
   addPost: (req, res) => {
@@ -14,21 +14,52 @@ module.exports = {
       likes: [],
       files: req.attachmentNames,
       images: req.imageNames,
+      hidden: false,
     });
     newPost
       .save()
       .then((post) => {
         return res.send({
           status: true,
-          msg: "Post added",
+          alert: { type: SUCCESS, msg: "Your Post has been added" },
         });
       })
       .catch((err) => {
-        console.log("err", err);
+        return res.send(UNEXPECTED_ERROR);
+      });
+  },
+  updatePost: (req, res) => {
+    let { post, postId, oldAttachments, oldImages } = req.body;
+    console.log(
+      req.body,
+      [...JSON.parse(oldAttachments), ...req.attachmentNames],
+      [...JSON.parse(oldImages), ...req.imageNames]
+    );
+    Post.findByIdAndUpdate(postId, {
+      post,
+      files: [...JSON.parse(oldAttachments), ...req.attachmentNames],
+      images: [...JSON.parse(oldImages), ...req.imageNames],
+    })
+      .then((post) => {
         return res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
+          status: true,
         });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.send(UNEXPECTED_ERROR);
+      });
+  },
+  deletePost: (req, res) => {
+    let { postId } = req.body;
+    Post.findByIdAndDelete(postId)
+      .then(() => {
+        return res.send({
+          status: true,
+        });
+      })
+      .catch((err) => {
+        return res.send(UNEXPECTED_ERROR);
       });
   },
   getTimelinePosts: (req, res) => {
@@ -41,6 +72,7 @@ module.exports = {
               userId: {
                 $in: [...user.following].map((id) => ObjectId(id)),
               },
+              hidden: false,
             },
           },
           {
@@ -78,17 +110,11 @@ module.exports = {
             );
           })
           .catch((err) => {
-            return res.send({
-              status: false,
-              msg: UNEXPECTED_ERROR,
-            });
+            return res.send(UNEXPECTED_ERROR);
           });
       })
       .catch((err) => {
-        return res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
-        });
+        return res.send(UNEXPECTED_ERROR);
       });
   },
   getProfileInformation: (req, res) => {
@@ -141,17 +167,11 @@ module.exports = {
             });
           })
           .catch((err) => {
-            return res.send({
-              status: false,
-              msg: UNEXPECTED_ERROR,
-            });
+            return res.send(UNEXPECTED_ERROR);
           });
       })
       .catch((err) => {
-        return res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
-        });
+        return res.send(UNEXPECTED_ERROR);
       });
   },
   getPostById: (req, res) => {
@@ -199,11 +219,39 @@ module.exports = {
         res.send(post);
       })
       .catch((err) => {
-        console.log(err);
+        return res.send(UNEXPECTED_ERROR);
+      });
+  },
+
+  hidePost: (req, res) => {
+    const { postId } = req.body;
+
+    Post.findByIdAndUpdate(postId, {
+      hidden: true,
+    })
+      .then(() => {
         return res.send({
-          status: false,
-          msg: UNEXPECTED_ERROR,
+          status: true,
         });
+      })
+      .catch((err) => {
+        return res.send(UNEXPECTED_ERROR);
+      });
+  },
+
+  unhidePost: (req, res) => {
+    const { postId } = req.body;
+
+    Post.findByIdAndUpdate(postId, {
+      hidden: false,
+    })
+      .then(() => {
+        return res.send({
+          status: true,
+        });
+      })
+      .catch((err) => {
+        return res.send(UNEXPECTED_ERROR);
       });
   },
 };

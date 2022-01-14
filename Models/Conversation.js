@@ -4,6 +4,7 @@ const Message = new mongoose.Schema(
   {
     sentBy: mongoose.Schema.Types.ObjectId,
     text: String,
+    seen: Boolean,
   },
   { timestamps: true }
 );
@@ -12,7 +13,6 @@ const schema = new mongoose.Schema(
   {
     participants: [mongoose.Schema.Types.ObjectId],
     messages: [Message],
-    seenBy: [mongoose.Schema.Types.ObjectId],
   },
   { timestamps: true }
 );

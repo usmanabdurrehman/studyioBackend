@@ -125,6 +125,7 @@ module.exports = {
             $and: [
               { name: new RegExp(name, "i") },
               { _id: { $nin: idsOfContacts } },
+              { _id: { $ne: ObjectId(_id) } },
             ],
           },
           "_id name profileImage"
@@ -140,6 +141,55 @@ module.exports = {
           });
       })
       .catch((err) => {
+        return res.send({
+          status: false,
+          msg: UNEXPECTED_ERROR,
+        });
+      });
+  },
+  seeConversation: (req, res) => {
+    let { id } = req.body;
+    Conversation.updateMany({ _id: ObjectId(id) }, { "messages.seen": true })
+      .then(() => {
+        return res.send({ status: true, msg: "Conversation seened" });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.send({
+          status: false,
+          msg: UNEXPECTED_ERROR,
+        });
+      });
+  },
+  getAllConversationsUnseenMessagesCount: (req, res) => {
+    let { _id } = req.user;
+    Conversation.find({ participants: ObjectId(_id) })
+      .then((conversations) => {
+        const count = conversations.reduce((acc, val) => {
+          acc += val.messages.filter((message) => !message.seen).length;
+          return acc;
+        }, 0);
+        console.log(count, conversations);
+        return res.send({ count });
+      })
+      .catch((err) => {
+        return res.send({
+          status: false,
+          msg: UNEXPECTED_ERROR,
+        });
+      });
+  },
+  getConversationsUnseenMessagesCountById: (req, res) => {
+    let { id } = req.body;
+    Conversation.findById(id)
+      .then((conversation) => {
+        const count = (conversation || []).messages.filter(
+          (message) => !message.seen
+        ).length;
+        return res.send({ count });
+      })
+      .catch((err) => {
+        console.log(err);
         return res.send({
           status: false,
           msg: UNEXPECTED_ERROR,
