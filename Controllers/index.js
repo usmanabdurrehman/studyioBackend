@@ -1,9 +1,9 @@
 module.exports = {
-  commentController: require("./commentController"),
-  followController: require("./followController"),
-  likesController: require("./likesController"),
-  notificationController: require("./notificationController"),
-  postsController: require("./postsController"),
-  userController: require("./userController"),
-  conversationController: require("./conversationController"),
+  commentController: require("./comment.controller"),
+  followController: require("./follow.controller"),
+  likesController: require("./likes.controller"),
+  notificationController: require("./notification.controller"),
+  postsController: require("./posts.controller"),
+  userController: require("./user.controller"),
+  conversationController: require("./conversation.controller"),
 };

@@ -8,9 +8,8 @@ const {
   notificationController,
   postsController,
   userController,
+  conversationController,
 } = require("../Controllers");
-
-const conversationController = require("../Controllers/conversationController");
 
 const isArray = (value) => Array.isArray(value);
 

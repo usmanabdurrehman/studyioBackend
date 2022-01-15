@@ -149,7 +149,14 @@ module.exports = {
   },
   seeConversation: (req, res) => {
     let { id } = req.body;
-    Conversation.updateMany({ _id: ObjectId(id) }, { "messages.seen": true })
+    Conversation.updateMany(
+      { _id: ObjectId(id), "messages.seen": false },
+      {
+        $set: {
+          "messages.seen": true,
+        },
+      }
+    )
       .then(() => {
         return res.send({ status: true, msg: "Conversation seened" });
       })
