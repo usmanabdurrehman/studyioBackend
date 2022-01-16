@@ -54,6 +54,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", require("./APIs/publicAPI"));
 app.use("/user", require("./APIs/protectedAPI"));
 
-server.listen(7000, (req, res) => {
+server.listen(app.get('port'), (req, res) => {
   console.log("Server running on PORT 7000");
 });
