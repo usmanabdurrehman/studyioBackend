@@ -70,9 +70,13 @@ module.exports = {
           {
             $match: {
               userId: {
-                $in: [...user.following].map((id) => ObjectId(id)),
+                $in: [...user.following, _id].map((id) => ObjectId(id)),
               },
-              hidden: false,
+              $or:[{
+                hidden:false
+              },{
+                hidden:{$exists:false}
+              }]
             },
           },
           {

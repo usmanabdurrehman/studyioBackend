@@ -7,12 +7,13 @@ const jwt = require("jsonwebtoken");
 
 module.exports = {
   signup: (req, res) => {
-    let { name, email, password } = req.body;
+    let { name, email, password, bio } = req.body;
     console.log(req.body);
     const newUser = new User({
       name,
       email,
       password,
+      bio,
       profileImage: req.image,
       followers: [],
       following: [],
