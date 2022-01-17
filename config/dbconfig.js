@@ -6,9 +6,7 @@ const jwt = require("jsonwebtoken");
 const cookie = require("cookie");
 
 mongoose
-  .connect(
-    "mongodb+srv://QWERTY:QWERTY@cluster0.usc1l.mongodb.net/studyio?retryWrites=true&w=majority"
-  )
+  .connect(process.env.DB_URI)
   .then(() => {
     console.log("MongoDB connected");
 

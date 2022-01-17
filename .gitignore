@@ -1,4 +1,6 @@
+.env
 node_modules/
 url.txt
 public/profileImages/
 public/postImages/
+test.js

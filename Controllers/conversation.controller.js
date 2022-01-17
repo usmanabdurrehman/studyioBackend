@@ -161,7 +161,6 @@ module.exports = {
         return res.send({ status: true, msg: "Conversation seened" });
       })
       .catch((err) => {
-        console.log(err);
         return res.send({
           status: false,
           msg: UNEXPECTED_ERROR,
@@ -176,7 +175,6 @@ module.exports = {
           acc += val.messages.filter((message) => !message.seen).length;
           return acc;
         }, 0);
-        console.log(count, conversations);
         return res.send({ count });
       })
       .catch((err) => {
@@ -196,7 +194,6 @@ module.exports = {
         return res.send({ count });
       })
       .catch((err) => {
-        console.log(err);
         return res.send({
           status: false,
           msg: UNEXPECTED_ERROR,

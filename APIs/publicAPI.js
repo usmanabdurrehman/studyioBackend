@@ -1,20 +1,19 @@
 const router = require("express").Router();
 const formidable = require("formidable");
 
-let { userController } = require("../Controllers");
+const { userController } = require("../Controllers");
+
+const cloudinary = require("cloudinary");
 
 const profilePicUpload = (req, res, next) => {
-  const formData = formidable({
-    uploadDir: "./public/profileImages",
-    keepExtensions: true,
-  });
-  formData.parse(req, (err, fields, files) => {
+  const formData = formidable();
+  formData.parse(req, async (err, fields, files) => {
     if (err) {
       throw err;
       return;
     } else {
-      const image = files.image;
-      req.image = image.path.split("\\")[2];
+      const result = await cloudinary.uploader.upload(files.image.path);
+      req.image = result.secure_url;
       req.body = fields;
       next();
     }

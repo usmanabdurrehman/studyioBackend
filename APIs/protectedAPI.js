@@ -11,50 +11,75 @@ const {
   conversationController,
 } = require("../Controllers");
 
-const isArray = (value) => Array.isArray(value);
+const arrayTransform = (value) => {
+  const isArray = Array.isArray(value);
+  return value ? (isArray ? value : [value]) : [];
+};
+
+const cloudinary = require("cloudinary");
+
+const streamUpload = (path) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.v2.uploader.upload(
+      path,
+      { resource_type: "auto" },
+      (error, result) => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject(error);
+        }
+      }
+    );
+  });
+};
 
 const postFilesUpload = (req, res, next) => {
   const formData = formidable({
-    uploadDir: "./public/postImages",
-    keepExtensions: true,
     multiples: true,
+    keepExtensions: true,
   });
-  formData.parse(req, (err, fields, files) => {
+  formData.parse(req, async (err, fields, files) => {
     if (err) {
       throw err;
-      return;
     } else {
-      const attachments = files.attachments;
-      const images = files.images;
-      const attachmentNames = (
-        attachments ? (isArray(attachments) ? attachments : [attachments]) : []
-      ).map((file) => ({
-        filename: file.path.split("\\")[2],
-        originalFilename: file.name,
-      }));
-      const imageNames = (
-        images ? (isArray(images) ? images : [images]) : []
-      ).map((file) => file.path.split("\\")[2]);
-      req.attachmentNames = attachmentNames;
-      req.imageNames = imageNames;
-      req.body = fields;
-      next();
+      try {
+        const attachments = files.attachments;
+        const images = files.images;
+        const imageUploadPromises = arrayTransform(images).map((image) =>
+          streamUpload(image.path)
+        );
+        const imageResults = await Promise.all(imageUploadPromises);
+        const imageUrls = imageResults.map((result) => result.secure_url);
+
+        const attachmentUploadPromises = arrayTransform(
+          attachments
+        ).map((attachment) => streamUpload(attachment.path));
+        const attachmentResults = await Promise.all(attachmentUploadPromises);
+        const attachmentUrls = attachmentResults.map((result, index) => ({
+          filename: result.secure_url,
+          originalFilename: attachments[index].name,
+        }));
+
+        req.attachmentNames = attachmentUrls;
+        req.imageNames = imageUrls;
+        req.body = fields;
+        next();
+      } catch (err) {
+      }
     }
   });
 };
 
 const profilePicUpload = (req, res, next) => {
-  const formData = formidable({
-    uploadDir: "./public/profileImages",
-    keepExtensions: true,
-  });
-  formData.parse(req, (err, fields, files) => {
+  const formData = formidable();
+  formData.parse(req, async (err, fields, files) => {
     if (err) {
       throw err;
       return;
     } else {
-      const image = files.image;
-      req.image = image.path.split("\\")[2];
+      const result = await cloudinary.uploader.upload(files.image.path);
+      req.image = result.secure_url;
       req.body = fields;
       next();
     }

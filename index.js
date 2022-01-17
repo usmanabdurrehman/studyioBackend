@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const cors = require("cors");
 const path = require("path");
 const db = require("./config/dbconfig");
@@ -10,6 +12,13 @@ const { io, app, server } = require("./server");
 const express = require("express");
 
 const util = require("util");
+const cloudinary = require("cloudinary");
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 util.inspect.defaultOptions.maxArrayLength = null;
 util.inspect.defaultOptions.compact = false;
@@ -54,6 +63,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", require("./APIs/publicAPI"));
 app.use("/user", require("./APIs/protectedAPI"));
 
-server.listen(app.get('port'), (req, res) => {
+server.listen(app.get("port"), (req, res) => {
   console.log("Server running on PORT 7000");
 });

@@ -1,7 +1,7 @@
-const { User, Post, Notification } = require("../Models");
+const { User, Post } = require("../Models");
 
 const ObjectId = require("mongoose").Types.ObjectId;
-const { SUCCESS, UNEXPECTED_ERROR } = require("../constants");
+const { UNEXPECTED_ERROR } = require("../constants");
 
 module.exports = {
   addPost: (req, res) => {
@@ -21,7 +21,6 @@ module.exports = {
       .then((post) => {
         return res.send({
           status: true,
-          alert: { type: SUCCESS, msg: "Your Post has been added" },
         });
       })
       .catch((err) => {
@@ -29,14 +28,9 @@ module.exports = {
       });
   },
   updatePost: (req, res) => {
-    let { post, postId, oldAttachments, oldImages } = req.body;
-    console.log(
-      req.body,
-      [...JSON.parse(oldAttachments), ...req.attachmentNames],
-      [...JSON.parse(oldImages), ...req.imageNames]
-    );
+    const { post, postId, oldAttachments, oldImages } = req.body;
     Post.findByIdAndUpdate(postId, {
-      post,
+      postText: post,
       files: [...JSON.parse(oldAttachments), ...req.attachmentNames],
       images: [...JSON.parse(oldImages), ...req.imageNames],
     })
@@ -46,7 +40,6 @@ module.exports = {
         });
       })
       .catch((err) => {
-        console.log(err);
         return res.send(UNEXPECTED_ERROR);
       });
   },
@@ -72,11 +65,7 @@ module.exports = {
               userId: {
                 $in: [...user.following, _id].map((id) => ObjectId(id)),
               },
-              $or:[{
-                hidden:false
-              },{
-                hidden:{$exists:false}
-              }]
+              hidden: false,
             },
           },
           {
