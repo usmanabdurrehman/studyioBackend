@@ -103,10 +103,12 @@ module.exports = {
             );
           })
           .catch((err) => {
+            console.log(err);
             return res.send(UNEXPECTED_ERROR);
           });
       })
       .catch((err) => {
+        console.log(err);
         return res.send(UNEXPECTED_ERROR);
       });
   },
