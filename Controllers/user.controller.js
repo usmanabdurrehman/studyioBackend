@@ -63,6 +63,7 @@ module.exports = {
               expires: new Date(
                 Date.now() + (rememberMe ? 30 * 24 * 3600000 : 24 * 3600000)
               ),
+              sameSite:"none"
             });
             return res.send({
               auth: true,
