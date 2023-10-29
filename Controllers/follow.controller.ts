@@ -1,20 +1,21 @@
-import { UserModel, Post, Notification } from "../Models";
+import { UserModel, NotificationModel } from "../Models/index.js";
 
-import { UNEXPECTED_ERROR } from "../constants";
-import { APIFunction } from "../types";
-const ObjectId = require("mongoose").Types.ObjectId;
+import { UNEXPECTED_ERROR } from "../constants/index.js";
+import { APIFunction, User } from "../types/index.js";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
 
-export const follow: APIFunction = (req, res) => {
-  let { _id } = req.user;
+const follow: APIFunction = (req, res) => {
+  let { _id } = req.user || {};
   let { userId } = req.body;
   UserModel.findByIdAndUpdate(userId, { $push: { followers: _id } })
     .then((user: User) => {
       UserModel.findByIdAndUpdate(_id, { $push: { following: userId } })
         .then((user) => {
-          const newNotification = new Notification({
+          const newNotification = new NotificationModel({
             action: "followed",
-            doer: ObjectId(_id),
-            reciever: ObjectId(userId),
+            doer: new ObjectId(_id),
+            reciever: new ObjectId(userId),
             seen: false,
           });
           newNotification
@@ -43,8 +44,8 @@ export const follow: APIFunction = (req, res) => {
       });
     });
 };
-export const unfollow: APIFunction = (req, res) => {
-  let { _id } = req.user;
+const unfollow: APIFunction = (req, res) => {
+  let { _id } = req.user || {};
   let { userId } = req.body;
   UserModel.findByIdAndUpdate(userId, { $pull: { followers: _id } })
     .then((user) => {
@@ -66,3 +67,5 @@ export const unfollow: APIFunction = (req, res) => {
       });
     });
 };
+
+export default { follow, unfollow };

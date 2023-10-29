@@ -1,24 +1,25 @@
 import formidable from "formidable";
-const router = require("express").Router();
+import express from "express";
+const router = express.Router();
 
 import {
-  commentController,
+  commentsController,
   followController,
   likesController,
   notificationController,
   postsController,
   userController,
   conversationController,
-} from "../Controllers";
+} from "../Controllers/index.js";
 
-const arrayTransform = (value: string | string[]) => {
+import cloudinary from "cloudinary";
+
+const arrayTransform = <T>(value: T | T[]): T[] => {
   const isArray = Array.isArray(value);
   return value ? (isArray ? value : [value]) : [];
 };
 
-const cloudinary = require("cloudinary");
-
-const streamUpload = (path) => {
+const streamUpload = (path: string) => {
   return new Promise((resolve, reject) => {
     cloudinary.v2.uploader.upload(
       path,
@@ -34,12 +35,12 @@ const streamUpload = (path) => {
   });
 };
 
-const postFilesUpload = (req, res, next) => {
+const postFilesUpload = (req: any, res: any, next: any) => {
   const formData = formidable({
     multiples: true,
     keepExtensions: true,
   });
-  formData.parse(req, async (err, fields, files) => {
+  formData.parse(req, async (err, fields, files: any) => {
     if (err) {
       throw err;
     } else {
@@ -49,13 +50,17 @@ const postFilesUpload = (req, res, next) => {
         const imageUploadPromises = arrayTransform(images).map((image) =>
           streamUpload(image.path)
         );
-        const imageResults = await Promise.all(imageUploadPromises);
+        const imageResults = (await Promise.all(imageUploadPromises)) as {
+          secure_url: string;
+        }[];
         const imageUrls = imageResults.map((result) => result.secure_url);
 
         const attachmentUploadPromises = arrayTransform(attachments).map(
           (attachment) => streamUpload(attachment.path)
         );
-        const attachmentResults = await Promise.all(attachmentUploadPromises);
+        const attachmentResults = (await Promise.all(
+          attachmentUploadPromises
+        )) as { secure_url: string }[];
         const attachmentUrls = attachmentResults.map((result, index) => ({
           filename: result.secure_url,
           originalFilename: attachments[index].name,
@@ -70,14 +75,14 @@ const postFilesUpload = (req, res, next) => {
   });
 };
 
-const profilePicUpload = (req, res, next) => {
+const profilePicUpload = (req: any, res: any, next: any) => {
   const formData = formidable();
-  formData.parse(req, async (err, fields, files) => {
+  formData.parse(req, async (err, fields, files: any) => {
     if (err) {
       throw err;
       return;
     } else {
-      const result = await cloudinary.uploader.upload(files.image.path);
+      const result = await cloudinary.v2.uploader.upload(files.image.path);
       req.image = result.secure_url;
       req.body = fields;
       next();
@@ -98,8 +103,8 @@ router.get("/post/:id", postsController.getPostById);
 router.post("/likes", likesController.likePost);
 router.delete("/likes", likesController.unlikePost);
 
-router.post("/comments", commentController.commentOnPost);
-router.delete("/comments", commentController.deleteCommentFromPost);
+router.post("/comments", commentsController.commentOnPost);
+router.delete("/comments", commentsController.deleteCommentFromPost);
 
 router.post("/follow", followController.follow);
 router.delete("/follow", followController.unfollow);
@@ -134,4 +139,4 @@ router.post("/seeConversation", conversationController.seeConversation);
 
 router.get("/logout", userController.logout);
 
-export { router };
+export default router;

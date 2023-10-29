@@ -1,22 +1,23 @@
-import { PostModel, Notification } from "../Models";
-import { UNEXPECTED_ERROR } from "../constants";
-const ObjectId = require("mongoose").Types.ObjectId;
+import { PostModel, NotificationModel } from "../Models/index.js";
+import { UNEXPECTED_ERROR } from "../constants/index.js";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
 
-import { APIFunction, Post } from "../types";
+import { APIFunction, Post } from "../types/index.js";
 
-export const commentOnPost: APIFunction = (req, res) => {
-  let { _id } = req.user;
+const commentOnPost: APIFunction = (req, res) => {
+  let { _id } = req.user || {};
   let { postId, comment } = req.body;
   PostModel.findById(postId)
     .then((post: Post) => {
       const comments = [...post.comments, { commenter: _id, comment }];
       PostModel.findByIdAndUpdate(postId, { comments })
         .then((post: Post) => {
-          const newNotification = new Notification({
+          const newNotification = new NotificationModel({
             action: "commented",
-            doer: ObjectId(_id),
-            reciever: ObjectId(post.userId),
-            postId: ObjectId(postId),
+            doer: new ObjectId(_id),
+            reciever: new ObjectId(post.userId),
+            postId: new ObjectId(postId),
             seen: false,
           });
           newNotification
@@ -49,7 +50,7 @@ export const commentOnPost: APIFunction = (req, res) => {
     });
 };
 
-export const deleteCommentFromPost: APIFunction = (req, res) => {
+const deleteCommentFromPost: APIFunction = (req, res) => {
   let { postId, commentId } = req.body;
   PostModel.findById(postId)
     .then((post: Post) => {
@@ -77,3 +78,5 @@ export const deleteCommentFromPost: APIFunction = (req, res) => {
       });
     });
 };
+
+export default { commentOnPost, deleteCommentFromPost };

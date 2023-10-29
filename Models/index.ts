@@ -1,4 +1,4 @@
-export { UserModel } from "./User";
-export { PostModel } from "./Post";
-export { Notification } from "./Notification";
-export { ConversationModel } from "./Conversation";
+export { UserModel } from "./User.js";
+export { PostModel } from "./Post.js";
+export { NotificationModel } from "./Notification.js";
+export { ConversationModel } from "./Conversation.js";

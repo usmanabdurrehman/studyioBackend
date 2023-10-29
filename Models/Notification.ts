@@ -11,4 +11,4 @@ const schema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export const Notification = mongoose.model("Notification", schema);
+export const NotificationModel = mongoose.model("Notification", schema);

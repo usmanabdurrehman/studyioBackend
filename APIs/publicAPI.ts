@@ -1,16 +1,18 @@
-const router = require("express").Router();
+import express from "express";
+
+const router = express.Router();
 import formidable from "formidable";
 
-import { userController } from "../Controllers";
+import { userController } from "../Controllers/index.js";
 import cloudinary from "cloudinary";
 
-const profilePicUpload = (req, res, next) => {
+const profilePicUpload: any = (req: any, res: any, next: any) => {
   const formData = formidable();
-  formData.parse(req, async (err, fields, files) => {
+  formData.parse(req, async (err, fields, files: any) => {
     if (err) {
       throw err;
     } else {
-      const result = await cloudinary.uploader.upload(files.image.path);
+      const result = await cloudinary.v2.uploader.upload(files.image.path);
       req.image = result.secure_url;
       req.body = fields;
       next();
@@ -21,4 +23,4 @@ const profilePicUpload = (req, res, next) => {
 router.post("/signin", userController.signin);
 router.post("/signup", profilePicUpload, userController.signup);
 
-export { router };
+export default router;

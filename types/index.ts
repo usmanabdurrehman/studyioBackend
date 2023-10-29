@@ -37,7 +37,7 @@ export type Post = Abstract & {
 };
 
 export type Notification = Abstract & {
-  action: "liked" | "commented" | "followed"; // liked | commented | followed
+  action: "liked" | "commented" | "followed";
   doer: string;
   reciever: string;
   postId: string;
@@ -56,7 +56,10 @@ export type Conversation = Abstract & {
 };
 
 export interface ServerRequest extends Express.Request {
-  user: User;
+  user?: User;
+  image?: any;
+  attachmentNames?: any[];
+  imageNames?: any[];
 }
 
 export type APIFunction = (req: ServerRequest, res: Express.Response) => void;

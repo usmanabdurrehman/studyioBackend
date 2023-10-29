@@ -1,15 +1,16 @@
-import { UNEXPECTED_ERROR } from "../constants";
-import { Notification } from "../Models";
+import { UNEXPECTED_ERROR } from "../constants/index.js";
+import { NotificationModel } from "../Models/index.js";
+import { APIFunction } from "../types/index.js";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
 
-const ObjectId = require("mongoose").Types.ObjectId;
-
-export const getNotifications = (req, res) => {
-  let { _id } = req.user;
-  Notification.aggregate([
+const getNotifications: APIFunction = (req, res) => {
+  let { _id } = req.user || {};
+  NotificationModel.aggregate([
     { $addFields: { fromSamePerson: { $eq: ["$doer", "$reciever"] } } },
     {
       $match: {
-        $and: [{ reciever: ObjectId(_id) }, { fromSamePerson: false }],
+        $and: [{ reciever: new ObjectId(_id) }, { fromSamePerson: false }],
       },
     },
     {
@@ -55,7 +56,7 @@ export const getNotifications = (req, res) => {
       return res.send(
         notifications.map(
           ({ _id, postId, name, action, profileImage, doerId }) => {
-            const messageWrapper = {
+            const messageWrapper: any = {
               followed: `${name[0]} has started following you`,
               liked: `${name[0]} has ${action} your post`,
               commented: `${name[0]} has ${action} on your post`,
@@ -79,14 +80,14 @@ export const getNotifications = (req, res) => {
       });
     });
 };
-export const getUnseenNotificationsCount = (req, res) => {
-  const { _id } = req.user;
-  Notification.aggregate([
+const getUnseenNotificationsCount: APIFunction = (req, res) => {
+  const { _id } = req.user || {};
+  NotificationModel.aggregate([
     { $addFields: { fromSamePerson: { $eq: ["$doer", "$reciever"] } } },
     {
       $match: {
         $and: [
-          { reciever: ObjectId(_id), seen: false },
+          { reciever: new ObjectId(_id), seen: false },
           { fromSamePerson: false },
         ],
       },
@@ -105,10 +106,10 @@ export const getUnseenNotificationsCount = (req, res) => {
       });
     });
 };
-export const seeNotifications = (req, res) => {
-  let { _id } = req.user;
-  Notification.updateMany(
-    { reciever: ObjectId(_id), seen: false },
+const seeNotifications: APIFunction = (req, res) => {
+  let { _id } = req.user || {};
+  NotificationModel.updateMany(
+    { reciever: new ObjectId(_id), seen: false },
     { seen: true }
   )
     .then((notification) => {
@@ -120,4 +121,10 @@ export const seeNotifications = (req, res) => {
         msg: UNEXPECTED_ERROR,
       });
     });
+};
+
+export default {
+  seeNotifications,
+  getNotifications,
+  getUnseenNotificationsCount,
 };

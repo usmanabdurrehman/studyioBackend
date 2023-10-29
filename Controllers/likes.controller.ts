@@ -1,18 +1,24 @@
-import { Post, Notification } from "../Models";
+import { NotificationModel, PostModel } from "../Models/index.js";
 
-import { UNEXPECTED_ERROR } from "../constants";
-const ObjectId = require("mongoose").Types.ObjectId;
+import { UNEXPECTED_ERROR } from "../constants/index.js";
+import { APIFunction } from "../types/index.js";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
 
-export const likePost = (req, res) => {
-  let { email, _id } = req.user;
+const likePost: APIFunction = (req, res) => {
+  let { email, _id } = req.user || {};
   let { postId } = req.body;
-  Post.findByIdAndUpdate(postId, { $push: { likes: email } }, { new: true })
+  PostModel.findByIdAndUpdate(
+    postId,
+    { $push: { likes: email } },
+    { new: true }
+  )
     .then((post) => {
-      const newNotification = new Notification({
+      const newNotification = new NotificationModel({
         action: "liked",
-        doer: ObjectId(_id),
-        reciever: ObjectId(post.userId),
-        postId: ObjectId(postId),
+        doer: new ObjectId(_id),
+        reciever: new ObjectId(post.userId),
+        postId: new ObjectId(postId),
         seen: false,
       });
       newNotification
@@ -20,7 +26,7 @@ export const likePost = (req, res) => {
         .then(() => {
           return res.send({ status: true, msg: "Post Liked" });
         })
-        .catch((err) => {
+        .catch((err: Error) => {
           return res.send({
             status: false,
             msg: UNEXPECTED_ERROR,
@@ -34,10 +40,10 @@ export const likePost = (req, res) => {
       });
     });
 };
-export const unlikePost = (req, res) => {
-  let { email } = req.user;
+const unlikePost: APIFunction = (req, res) => {
+  let { email } = req.user || {};
   let { postId } = req.body;
-  Post.findByIdAndUpdate(postId, { $pull: { likes: email } })
+  PostModel.findByIdAndUpdate(postId, { $pull: { likes: email } })
     .then((post) => {
       return res.send({ status: true, msg: "Post unliked" });
     })
@@ -48,3 +54,5 @@ export const unlikePost = (req, res) => {
       });
     });
 };
+
+export default { likePost, unlikePost };

@@ -1,16 +1,21 @@
-import { ConversationModel, UserModel } from "../Models";
+import { ConversationModel, UserModel } from "../Models/index.js";
 
-import { UNEXPECTED_ERROR } from "../constants";
-import { APIFunction, Conversation, ServerRequest, User } from "../types";
-const ObjectId = require("mongoose").Types.ObjectId;
-import Express from "express";
+import { UNEXPECTED_ERROR } from "../constants/index.js";
+import {
+  APIFunction,
+  Conversation,
+  ServerRequest,
+  User,
+} from "../types/index.js";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
 
-export const startConversation: APIFunction = (req, res) => {
+const startConversation: APIFunction = (req, res) => {
   const { id } = req.body;
-  const { _id } = req.user;
+  const { _id } = req.user || {};
 
   const newConversation = new ConversationModel({
-    participants: [ObjectId(id), ObjectId(_id)],
+    participants: [new ObjectId(id), new ObjectId(_id)],
     messages: [],
     seenBy: [],
   });
@@ -30,16 +35,13 @@ export const startConversation: APIFunction = (req, res) => {
       });
     });
 };
-export const getConversationById = (
-  req: ServerRequest,
-  res: Express.Response
-) => {
+const getConversationById: APIFunction = (req, res) => {
   const { id } = req.params;
 
   ConversationModel.aggregate([
     {
       $match: {
-        _id: ObjectId(id),
+        _id: new ObjectId(id),
       },
     },
     {
@@ -67,12 +69,12 @@ export const getConversationById = (
       });
     });
 };
-export const getConversationsOfUser: APIFunction = (req, res) => {
-  const { _id: id } = req.user;
+const getConversationsOfUser: APIFunction = (req, res) => {
+  const { _id: id } = req.user || {};
   ConversationModel.aggregate([
     {
       $match: {
-        participants: ObjectId(id),
+        participants: new ObjectId(id),
       },
     },
     {
@@ -106,10 +108,10 @@ export const getConversationsOfUser: APIFunction = (req, res) => {
       });
     });
 };
-export const fetchMorePeople: APIFunction = (req, res) => {
+const fetchMorePeople: APIFunction = (req, res) => {
   let { name } = req.body;
-  const { _id } = req.user;
-  ConversationModel.find({ participants: ObjectId(_id) })
+  const { _id } = req.user || {};
+  ConversationModel.find({ participants: new ObjectId(_id) })
     .then((conversations) => {
       const idsOfContacts = [
         ...new Set(
@@ -123,7 +125,7 @@ export const fetchMorePeople: APIFunction = (req, res) => {
           $and: [
             { name: new RegExp(name, "i") },
             { _id: { $nin: idsOfContacts } },
-            { _id: { $ne: ObjectId(_id) } },
+            { _id: { $ne: new ObjectId(_id) } },
           ],
         },
         "_id name profileImage"
@@ -145,10 +147,10 @@ export const fetchMorePeople: APIFunction = (req, res) => {
       });
     });
 };
-export const seeConversation: APIFunction = (req, res) => {
+const seeConversation: APIFunction = (req, res) => {
   let { id } = req.body;
   ConversationModel.updateMany(
-    { _id: ObjectId(id), "messages.seen": false },
+    { _id: new ObjectId(id), "messages.seen": false },
     {
       $set: {
         "messages.seen": true,
@@ -165,12 +167,9 @@ export const seeConversation: APIFunction = (req, res) => {
       });
     });
 };
-export const getAllConversationsUnseenMessagesCount: APIFunction = (
-  req,
-  res
-) => {
-  let { _id } = req.user;
-  ConversationModel.find({ participants: ObjectId(_id) })
+const getAllConversationsUnseenMessagesCount: APIFunction = (req, res) => {
+  let { _id } = req.user || {};
+  ConversationModel.find({ participants: new ObjectId(_id) })
     .then((conversations: Conversation[]) => {
       const count = conversations.reduce((acc, val) => {
         acc += val.messages.filter((message) => !message.seen).length;
@@ -186,10 +185,7 @@ export const getAllConversationsUnseenMessagesCount: APIFunction = (
     });
 };
 
-export const getConversationsUnseenMessagesCountById: APIFunction = (
-  req,
-  res
-) => {
+const getConversationsUnseenMessagesCountById: APIFunction = (req, res) => {
   let { id } = req.body;
   ConversationModel.findById(id)
     .then((conversation: Conversation) => {
@@ -204,4 +200,14 @@ export const getConversationsUnseenMessagesCountById: APIFunction = (
         msg: UNEXPECTED_ERROR,
       });
     });
+};
+
+export default {
+  getAllConversationsUnseenMessagesCount,
+  getConversationById,
+  getConversationsOfUser,
+  getConversationsUnseenMessagesCountById,
+  startConversation,
+  seeConversation,
+  fetchMorePeople,
 };

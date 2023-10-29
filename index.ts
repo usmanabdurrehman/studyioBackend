@@ -1,18 +1,21 @@
-require("dotenv").config();
+import "./envConfig.js";
 
 import express from "express";
 import cors from "cors";
-require("./config/dbconfig");
+import "./config/dbconfig.js";
 
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 
-import { app, server } from "./server";
+import { app, server } from "./server.js";
 
-const util = require("util");
-const cloudinary = require("cloudinary");
+import util from "util";
+import cloudinary from "cloudinary";
 
-cloudinary.config({
+import publicRouter from "./APIs/publicAPI.js";
+import protectedRouter from "./APIs/publicAPI.js";
+
+cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
@@ -53,8 +56,8 @@ app.use("/user", (req, res, next) => {
   }
 });
 
-app.use("/", require("./APIs/publicAPI"));
-app.use("/user", require("./APIs/protectedAPI"));
+app.use("/", publicRouter);
+app.use("/user", protectedRouter);
 
 server.listen(app.get("port"), () => {
   console.log("Server running on PORT 7000");

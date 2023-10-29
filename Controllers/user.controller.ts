@@ -1,13 +1,15 @@
-import { User } from "../Models";
+import { UserModel } from "../Models/index.js";
 
-import { UNEXPECTED_ERROR, ERROR, SUCCESS } from "../constants";
-const ObjectId = require("mongoose").Types.ObjectId;
+import { UNEXPECTED_ERROR, ERROR, SUCCESS } from "../constants/index.js";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
 
 import jwt from "jsonwebtoken";
+import { APIFunction, User } from "../types/index.js";
 
-export const signup = (req, res) => {
+const signup: APIFunction = (req, res) => {
   let { name, email, password, bio } = req.body;
-  const newUser = new User({
+  const newUser = new UserModel({
     name,
     email,
     password,
@@ -16,8 +18,8 @@ export const signup = (req, res) => {
     followers: [],
     following: [],
   });
-  User.findOne({ email })
-    .then((user) => {
+  UserModel.findOne({ email })
+    .then((user: User) => {
       if (user) {
         return res.send({
           status: false,
@@ -38,19 +40,20 @@ export const signup = (req, res) => {
               },
             });
           })
-          .catch((err) => {
+          .catch((err: Error) => {
             return res.send(UNEXPECTED_ERROR);
           });
       }
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       res.send(UNEXPECTED_ERROR);
     });
 };
-export const signin = (req, res) => {
+
+const signin: APIFunction = (req, res) => {
   let { email, password, rememberMe } = req.body;
-  User.findOne({ email })
-    .then((user) => {
+  UserModel.findOne({ email })
+    .then((user: User) => {
       if (user) {
         if (user.password == password) {
           let token = jwt.sign({ user }, "sdjsilciur", {
@@ -85,44 +88,52 @@ export const signin = (req, res) => {
         });
       }
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const logout = (req, res) => {
+
+const logout: APIFunction = (req, res) => {
   res.clearCookie("token", {
     secure: process.env.NODE_ENV !== "development",
     httpOnly: true,
   });
   res.send({ status: true });
 };
-export const fetchNames = (req, res) => {
+
+const fetchNames: APIFunction = (req, res) => {
   let { name } = req.body;
-  const { _id } = req.user;
-  User.find(
+  const { _id } = req.user || {};
+  UserModel.find(
     {
-      $and: [{ name: new RegExp(name, "i") }, { _id: { $ne: ObjectId(_id) } }],
+      $and: [
+        { name: new RegExp(name, "i") },
+        { _id: { $ne: new ObjectId(_id) } },
+      ],
     },
     "_id name profileImage"
   )
-    .then((users) => {
+    .then((users: User[]) => {
       return res.send(users);
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const updateProfileImage = (req, res) => {
-  let { _id, profileImage } = req.user;
-  User.findByIdAndUpdate(
+
+const updateProfileImage: APIFunction = (req, res) => {
+  let { _id, profileImage } = req.user || {};
+  UserModel.findByIdAndUpdate(
     _id,
     { profileImage: req.image || profileImage },
     { new: true }
   )
-    .then((user) => {
+    .then((user: User) => {
       return res.send({ status: true, user });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
+
+export default { updateProfileImage, signin, signup, logout, fetchNames };

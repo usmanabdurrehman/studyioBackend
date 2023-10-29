@@ -1,12 +1,14 @@
-import { User, Post } from "../Models";
+import { UserModel, PostModel } from "../Models/index.js";
 
-const ObjectId = require("mongoose").Types.ObjectId;
-import { UNEXPECTED_ERROR } from "../constants";
+import mongoose from "mongoose";
+const ObjectId = mongoose.Types.ObjectId;
+import { UNEXPECTED_ERROR } from "../constants/index.js";
+import { APIFunction, Post } from "../types/index.js";
 
-export const addPost = (req, res) => {
-  let { _id: id } = req.user;
+const addPost: APIFunction = (req, res) => {
+  let { _id: id } = req.user || {};
   let { post } = req.body;
-  let newPost = new Post({
+  let newPost = new PostModel({
     postText: post,
     userId: id,
     comments: [],
@@ -17,52 +19,52 @@ export const addPost = (req, res) => {
   });
   newPost
     .save()
-    .then((post) => {
+    .then((post: Post) => {
       return res.send({
         status: true,
       });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const updatePost = (req, res) => {
+const updatePost: APIFunction = (req, res) => {
   const { post, postId, oldAttachments, oldImages } = req.body;
-  Post.findByIdAndUpdate(postId, {
+  PostModel.findByIdAndUpdate(postId, {
     postText: post,
-    files: [...JSON.parse(oldAttachments), ...req.attachmentNames],
-    images: [...JSON.parse(oldImages), ...req.imageNames],
+    files: [...JSON.parse(oldAttachments), ...(req?.attachmentNames || [])],
+    images: [...JSON.parse(oldImages), ...(req.imageNames || [])],
   })
-    .then((post) => {
+    .then((post: Post) => {
       return res.send({
         status: true,
       });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const deletePost = (req, res) => {
+const deletePost: APIFunction = (req, res) => {
   let { postId } = req.body;
-  Post.findByIdAndDelete(postId)
+  PostModel.findByIdAndDelete(postId)
     .then(() => {
       return res.send({
         status: true,
       });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const getTimelinePosts = (req, res) => {
-  let { _id, email } = req.user;
-  User.findById(_id)
+const getTimelinePosts: APIFunction = (req, res) => {
+  let { _id, email } = req.user || {};
+  UserModel.findById(_id)
     .then((user) => {
-      Post.aggregate([
+      PostModel.aggregate([
         {
           $match: {
             userId: {
-              $in: [...user.following, _id].map((id) => ObjectId(id)),
+              $in: [...user.following, _id].map((id) => new ObjectId(id)),
             },
             hidden: false,
           },
@@ -89,10 +91,10 @@ export const getTimelinePosts = (req, res) => {
           return res.send(
             posts.map(({ commenters, comments, user, ...rest }) => ({
               ...rest,
-              comments: comments.map((comment) => ({
+              comments: comments.map((comment: any) => ({
                 ...comment,
                 commenter: commenters.find(
-                  (commenter) =>
+                  (commenter: any) =>
                     commenter._id.toString() == comment.commenter.toString()
                 ),
               })),
@@ -101,24 +103,24 @@ export const getTimelinePosts = (req, res) => {
             }))
           );
         })
-        .catch((err) => {
+        .catch((err: Error) => {
           console.log(err);
           return res.send(UNEXPECTED_ERROR);
         });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       console.log(err);
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const getProfileInformation = (req, res) => {
+const getProfileInformation: APIFunction = (req, res) => {
   let { id } = req.params;
-  let { _id, email } = req.user;
-  User.findById(id)
+  let { _id, email } = req.user || {};
+  UserModel.findById(id)
     .then((user) => {
-      Post.aggregate([
+      PostModel.aggregate([
         {
-          $match: { userId: ObjectId(id) },
+          $match: { userId: new ObjectId(id) },
         },
         {
           $lookup: {
@@ -148,10 +150,10 @@ export const getProfileInformation = (req, res) => {
             user,
             posts: posts.map(({ commenters, comments, user, ...rest }) => ({
               ...rest,
-              comments: comments.map((comment) => ({
+              comments: comments.map((comment: any) => ({
                 ...comment,
                 commenter: commenters.find(
-                  (commenter) =>
+                  (commenter: any) =>
                     commenter._id.toString() == comment.commenter.toString()
                 ),
               })),
@@ -160,21 +162,21 @@ export const getProfileInformation = (req, res) => {
             })),
           });
         })
-        .catch((err) => {
+        .catch((err: Error) => {
           return res.send(UNEXPECTED_ERROR);
         });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
-export const getPostById = (req, res) => {
+const getPostById: APIFunction = (req, res) => {
   const { id } = req.params;
-  const { email } = req.user;
-  Post.aggregate([
+  const { email } = req.user || {};
+  PostModel.aggregate([
     {
       $match: {
-        _id: ObjectId(id),
+        _id: new ObjectId(id),
       },
     },
     {
@@ -196,31 +198,31 @@ export const getPostById = (req, res) => {
     { $sort: { createdAt: -1 } },
   ])
     .then((post) => {
-      post = post[0];
-      post = {
+      let firstPost = post[0];
+      firstPost = {
         ...post,
-        liked: post.likes.includes(email),
-        comments: post.comments.map((comment) => ({
+        liked: firstPost.likes.includes(email),
+        comments: firstPost.comments.map((comment: any) => ({
           ...comment,
-          commenter: post.commenters.find(
-            (commenter) =>
+          commenter: firstPost.commenters.find(
+            (commenter: any) =>
               commenter._id.toString() == comment.commenter.toString()
           ),
         })),
-        user: post.user[0],
-      };
-      delete post.commenters;
+        user: firstPost.user[0],
+      } as any;
+      delete firstPost.commenters;
       res.send(post);
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
 
-export const hidePost = (req, res) => {
+const hidePost: APIFunction = (req, res) => {
   const { postId } = req.body;
 
-  Post.findByIdAndUpdate(postId, {
+  PostModel.findByIdAndUpdate(postId, {
     hidden: true,
   })
     .then(() => {
@@ -228,15 +230,15 @@ export const hidePost = (req, res) => {
         status: true,
       });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
 };
 
-export const unhidePost = (req, res) => {
+const unhidePost: APIFunction = (req, res) => {
   const { postId } = req.body;
 
-  Post.findByIdAndUpdate(postId, {
+  PostModel.findByIdAndUpdate(postId, {
     hidden: false,
   })
     .then(() => {
@@ -244,7 +246,18 @@ export const unhidePost = (req, res) => {
         status: true,
       });
     })
-    .catch((err) => {
+    .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);
     });
+};
+
+export default {
+  unhidePost,
+  hidePost,
+  deletePost,
+  getPostById,
+  getTimelinePosts,
+  getProfileInformation,
+  addPost,
+  updatePost,
 };
