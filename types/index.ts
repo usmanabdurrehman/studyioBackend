@@ -13,7 +13,7 @@ export type User = Abstract & {
   bio: string;
   followers: string[];
   following: string[];
-  profileImage: String;
+  profileImage: string;
 };
 
 export type Comment = Abstract & {

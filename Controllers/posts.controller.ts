@@ -2,8 +2,8 @@ import { UserModel, PostModel } from "../Models/index.js";
 
 import mongoose from "mongoose";
 const ObjectId = mongoose.Types.ObjectId;
-import { UNEXPECTED_ERROR } from "../constants/index.js";
-import { APIFunction, Post } from "../types/index.js";
+import { ERROR, UNEXPECTED_ERROR } from "../constants/index.js";
+import { APIFunction, Post, Comment } from "../types/index.js";
 
 const addPost: APIFunction = (req, res) => {
   let { _id: id } = req.user || {};
@@ -30,6 +30,7 @@ const addPost: APIFunction = (req, res) => {
 };
 const updatePost: APIFunction = (req, res) => {
   const { post, postId, oldAttachments, oldImages } = req.body;
+
   PostModel.findByIdAndUpdate(postId, {
     postText: post,
     files: [...JSON.parse(oldAttachments), ...(req?.attachmentNames || [])],
@@ -66,7 +67,6 @@ const getTimelinePosts: APIFunction = (req, res) => {
             userId: {
               $in: [...user.following, _id].map((id) => new ObjectId(id)),
             },
-            hidden: false,
           },
         },
         {
@@ -104,12 +104,10 @@ const getTimelinePosts: APIFunction = (req, res) => {
           );
         })
         .catch((err: Error) => {
-          console.log(err);
           return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err: Error) => {
-      console.log(err);
       return res.send(UNEXPECTED_ERROR);
     });
 };
@@ -198,21 +196,26 @@ const getPostById: APIFunction = (req, res) => {
     { $sort: { createdAt: -1 } },
   ])
     .then((post) => {
-      let firstPost = post[0];
+      if (!post?.length)
+        return res.send({
+          status: false,
+          alert: { type: ERROR, msg: "This post may have been deleted" },
+        });
+
+      let firstPost = post[0] || {};
       firstPost = {
-        ...post,
-        liked: firstPost.likes.includes(email),
-        comments: firstPost.comments.map((comment: any) => ({
+        ...firstPost,
+        liked: firstPost?.likes?.includes(email),
+        comments: firstPost?.comments?.map((comment: Comment) => ({
           ...comment,
-          commenter: firstPost.commenters.find(
+          commenter: firstPost?.commenters?.find(
             (commenter: any) =>
               commenter._id.toString() == comment.commenter.toString()
           ),
         })),
         user: firstPost.user[0],
-      } as any;
-      delete firstPost.commenters;
-      res.send(post);
+      };
+      res.send(firstPost);
     })
     .catch((err: Error) => {
       return res.send(UNEXPECTED_ERROR);

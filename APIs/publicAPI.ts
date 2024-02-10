@@ -12,7 +12,8 @@ const profilePicUpload: any = (req: any, res: any, next: any) => {
     if (err) {
       throw err;
     } else {
-      const result = await cloudinary.v2.uploader.upload(files.image.path);
+      if (!files?.image?.path) return next();
+      const result = await cloudinary.v2.uploader.upload(files?.image?.path);
       req.image = result.secure_url;
       req.body = fields;
       next();

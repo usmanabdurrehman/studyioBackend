@@ -24,24 +24,15 @@ const follow: APIFunction = (req, res) => {
               return res.send({ status: true });
             })
             .catch(() => {
-              return res.send({
-                status: false,
-                msg: UNEXPECTED_ERROR,
-              });
+              return res.send(UNEXPECTED_ERROR);
             });
         })
         .catch((err) => {
-          return res.send({
-            status: false,
-            msg: UNEXPECTED_ERROR,
-          });
+          return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const unfollow: APIFunction = (req, res) => {
@@ -54,17 +45,11 @@ const unfollow: APIFunction = (req, res) => {
           return res.send({ status: true });
         })
         .catch((err) => {
-          return res.send({
-            status: false,
-            msg: UNEXPECTED_ERROR,
-          });
+          return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 

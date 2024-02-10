@@ -29,10 +29,7 @@ const startConversation: APIFunction = (req, res) => {
       });
     })
     .catch((err: Error) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const getConversationById: APIFunction = (req, res) => {
@@ -63,10 +60,7 @@ const getConversationById: APIFunction = (req, res) => {
       });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const getConversationsOfUser: APIFunction = (req, res) => {
@@ -102,10 +96,7 @@ const getConversationsOfUser: APIFunction = (req, res) => {
       });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const fetchMorePeople: APIFunction = (req, res) => {
@@ -134,17 +125,11 @@ const fetchMorePeople: APIFunction = (req, res) => {
           return res.send(users);
         })
         .catch((err) => {
-          return res.send({
-            status: false,
-            msg: UNEXPECTED_ERROR,
-          });
+          return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const seeConversation: APIFunction = (req, res) => {
@@ -161,10 +146,7 @@ const seeConversation: APIFunction = (req, res) => {
       return res.send({ status: true, msg: "ConversationModel seened" });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const getAllConversationsUnseenMessagesCount: APIFunction = (req, res) => {
@@ -178,10 +160,7 @@ const getAllConversationsUnseenMessagesCount: APIFunction = (req, res) => {
       return res.send({ count });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 
@@ -195,10 +174,7 @@ const getConversationsUnseenMessagesCountById: APIFunction = (req, res) => {
       return res.send({ count });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 

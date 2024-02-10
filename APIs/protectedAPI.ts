@@ -62,8 +62,8 @@ const postFilesUpload = (req: any, res: any, next: any) => {
           attachmentUploadPromises
         )) as { secure_url: string }[];
         const attachmentUrls = attachmentResults.map((result, index) => ({
-          filename: result.secure_url,
-          originalFilename: attachments[index].name,
+          filename: result?.secure_url,
+          originalFilename: attachments[index]?.name,
         }));
 
         req.attachmentNames = attachmentUrls;
@@ -136,6 +136,7 @@ router.post(
   conversationController.getConversationsUnseenMessagesCountById
 );
 router.post("/seeConversation", conversationController.seeConversation);
+router.get("/loggedIn", userController.getLoggedInUser);
 
 router.get("/logout", userController.logout);
 

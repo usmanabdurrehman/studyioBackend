@@ -29,24 +29,15 @@ const commentOnPost: APIFunction = (req, res) => {
               });
             })
             .catch((err: Error) => {
-              return res.send({
-                status: false,
-                msg: UNEXPECTED_ERROR,
-              });
+              return res.send(UNEXPECTED_ERROR);
             });
         })
         .catch((err) => {
-          return res.send({
-            status: false,
-            msg: UNEXPECTED_ERROR,
-          });
+          return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 
@@ -65,17 +56,11 @@ const deleteCommentFromPost: APIFunction = (req, res) => {
           });
         })
         .catch((err) => {
-          return res.send({
-            status: false,
-            msg: UNEXPECTED_ERROR,
-          });
+          return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 

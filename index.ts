@@ -13,7 +13,7 @@ import util from "util";
 import cloudinary from "cloudinary";
 
 import publicRouter from "./APIs/publicAPI.js";
-import protectedRouter from "./APIs/publicAPI.js";
+import protectedRouter from "./APIs/protectedAPI.js";
 
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_NAME,

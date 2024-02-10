@@ -52,18 +52,21 @@ const signup: APIFunction = (req, res) => {
 
 const signin: APIFunction = (req, res) => {
   let { email, password, rememberMe } = req.body;
+  console.log({ rememberMe });
   UserModel.findOne({ email })
     .then((user: User) => {
       if (user) {
-        if (user.password == password) {
-          let token = jwt.sign({ user }, "sdjsilciur", {
+        if (user.password === password) {
+          const token = jwt.sign({ user }, process.env.JWT_SECRET || "", {
             expiresIn: rememberMe ? "30 days" : "1 day",
           });
+          const ONE_DAY = 24 * 3600000;
+          const THIRTY_DAYS = 30 * ONE_DAY;
           res.cookie("token", token, {
             secure: process.env.NODE_ENV !== "development",
             httpOnly: true,
             expires: new Date(
-              Date.now() + (rememberMe ? 30 * 24 * 3600000 : 24 * 3600000)
+              Date.now() + (rememberMe ? THIRTY_DAYS : ONE_DAY)
             ),
             sameSite: "none",
           });
@@ -74,13 +77,13 @@ const signin: APIFunction = (req, res) => {
           });
         } else {
           return res.send({
-            auth: false,
+            status: false,
             alert: { type: ERROR, msg: "The password entered is incorrect" },
           });
         }
       } else {
         return res.send({
-          auth: false,
+          status: false,
           alert: {
             type: ERROR,
             msg: "There is no user registered with this email",
@@ -136,4 +139,15 @@ const updateProfileImage: APIFunction = (req, res) => {
     });
 };
 
-export default { updateProfileImage, signin, signup, logout, fetchNames };
+const getLoggedInUser: APIFunction = (req, res) => {
+  res.send(req.user);
+};
+
+export default {
+  updateProfileImage,
+  signin,
+  signup,
+  logout,
+  fetchNames,
+  getLoggedInUser,
+};

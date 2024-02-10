@@ -74,10 +74,7 @@ const getNotifications: APIFunction = (req, res) => {
       );
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const getUnseenNotificationsCount: APIFunction = (req, res) => {
@@ -100,10 +97,7 @@ const getUnseenNotificationsCount: APIFunction = (req, res) => {
       });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const seeNotifications: APIFunction = (req, res) => {
@@ -116,10 +110,7 @@ const seeNotifications: APIFunction = (req, res) => {
       return res.send({ status: true, msg: "Notifications seened" });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 

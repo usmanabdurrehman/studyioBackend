@@ -27,17 +27,11 @@ const likePost: APIFunction = (req, res) => {
           return res.send({ status: true, msg: "Post Liked" });
         })
         .catch((err: Error) => {
-          return res.send({
-            status: false,
-            msg: UNEXPECTED_ERROR,
-          });
+          return res.send(UNEXPECTED_ERROR);
         });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 const unlikePost: APIFunction = (req, res) => {
@@ -48,10 +42,7 @@ const unlikePost: APIFunction = (req, res) => {
       return res.send({ status: true, msg: "Post unliked" });
     })
     .catch((err) => {
-      return res.send({
-        status: false,
-        msg: UNEXPECTED_ERROR,
-      });
+      return res.send(UNEXPECTED_ERROR);
     });
 };
 
