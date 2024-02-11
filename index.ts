@@ -59,6 +59,10 @@ app.use("/user", (req, res, next) => {
 app.use("/", publicRouter);
 app.use("/user", protectedRouter);
 
+app.get("/", (req, res) => {
+  res.send("Server Working");
+});
+
 server.listen(app.get("port"), () => {
   console.log("Server running on PORT 7000");
 });
