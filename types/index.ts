@@ -18,7 +18,7 @@ export type User = Abstract & {
 
 export type Comment = Abstract & {
   comment: string;
-  commenter: string;
+  commenter: string | User;
 };
 
 export type File = Abstract & {
@@ -34,6 +34,16 @@ export type Post = Abstract & {
   files: File[];
   images: string[];
   hidden: boolean;
+};
+
+export type AggregatedPost = Post & {
+  commenters: User[];
+  user: User[];
+};
+
+export type FullPost = Post & {
+  commenters: User[];
+  user: User[];
 };
 
 export type Notification = Abstract & {

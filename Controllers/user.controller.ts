@@ -9,6 +9,7 @@ import { APIFunction, User } from "../types/index.js";
 
 const signup: APIFunction = (req, res) => {
   let { name, email, password, bio } = req.body;
+
   const newUser = new UserModel({
     name,
     email,
@@ -52,7 +53,6 @@ const signup: APIFunction = (req, res) => {
 
 const signin: APIFunction = (req, res) => {
   let { email, password, rememberMe } = req.body;
-  console.log({ rememberMe });
   UserModel.findOne({ email })
     .then((user: User) => {
       if (user) {
