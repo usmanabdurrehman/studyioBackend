@@ -1,0 +1,3 @@
+For running server on glitch
+1) Glitch has a node range from 12 to 16. By default it uses 12 and uses pnpm as a package manager. Node 12 clashes with packages like typescript latest version etc so need to use "engines": { "node": "16" }, in package.json to use latest version
+2) tsx doesnt work in node 16 as well so removed that line from package.json
