@@ -60,16 +60,6 @@ const signin: APIFunction = (req, res) => {
           const token = jwt.sign({ user }, process.env.JWT_SECRET || "", {
             expiresIn: rememberMe ? "30 days" : "1 day",
           });
-          const ONE_DAY = 24 * 3600000;
-          const THIRTY_DAYS = 30 * ONE_DAY;
-          res.cookie("token", token, {
-            secure: process.env.NODE_ENV !== "development",
-            httpOnly: true,
-            expires: new Date(
-              Date.now() + (rememberMe ? THIRTY_DAYS : ONE_DAY)
-            ),
-            sameSite: "none",
-          });
           return res.send({
             auth: true,
             user,
@@ -97,10 +87,6 @@ const signin: APIFunction = (req, res) => {
 };
 
 const logout: APIFunction = (req, res) => {
-  res.clearCookie("token", {
-    secure: process.env.NODE_ENV !== "development",
-    httpOnly: true,
-  });
   res.send({ status: true });
 };
 

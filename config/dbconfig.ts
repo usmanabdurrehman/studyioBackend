@@ -11,6 +11,7 @@ mongoose
   .then(() => {
     console.log("MongoDB connected");
 
+    // TODO: Configure Socket logic for Chat Feature
     // io.use((socket, next) => {
     //   next();
     // });

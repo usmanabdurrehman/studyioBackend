@@ -39,7 +39,7 @@ app.use(
 app.use(cookieParser());
 
 app.use("/user", (req, res, next) => {
-  let token = req.cookies["token"];
+  let token = req.headers["authorization"];
 
   if (token) {
     jwt.verify(
