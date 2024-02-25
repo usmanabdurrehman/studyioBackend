@@ -1,81 +1,69 @@
 import mongoose from "mongoose";
-// import { io } from "../server";
+import { io } from "../server";
 
-// import { NotificationModel, ConversationModel } from "../Models/index.js/index.js";
+import { NotificationModel, ConversationModel } from "../Models/index.js";
 
-// import jwt from "jsonwebtoken";
-// import cookie from "cookie";
+import jwt from "jsonwebtoken";
 
 mongoose
   .connect(process.env.DB_URI || "")
   .then(() => {
     console.log("MongoDB connected");
 
-    // TODO: Configure Socket logic for Chat Feature
-    // io.use((socket, next) => {
-    //   next();
-    // });
+    io.use((socket, next) => {
+      const token = socket.handshake.headers["authorization"];
+      if (token) {
+        jwt.verify(token, process.env.JWT_SECRET || "", (err, decoded) => {
+          if (err) return next(new Error("User is not logged in"));
+          (socket as any).user = (decoded as any).user;
+          return next();
+        });
+      } else {
+        next(new Error("User is not logged in"));
+      }
+    });
 
-    // io.use((socket, next) => {
-    //   var cookief = socket.handshake.headers.cookie;
-    //   var cookies = cookie.parse(cookief);
-    //   if (cookies.token) {
-    //     jwt.verify(cookies.token, "sdjsilciur", (err, decoded) => {
-    //       if (err) return next(new Error("User is not logged in"));
-    //       socket.user = decoded.user;
-    //       return next();
-    //     });
-    //   } else {
-    //     next(new Error("User is not logged in"));
-    //   }
-    // });
+    io.on("connection", (socket) => {
+      socket.on("joinRoom", (data) => {
+        socket.join(data.id);
+      });
+      socket.on("leaveRoom", (data) => {
+        socket.leave(data.id);
+      });
 
-    // io.on("connection", (socket) => {
-    //   console.log(`user connected with id ${socket.id}`);
+      socket.on("connect_error", (err) => {});
 
-    //   socket.on("joinRoom", (data) => {
-    //     console.log(`User joined room with id ${data.id}`);
-    //     socket.join(data.id);
-    //   });
-    //   socket.on("leaveRoom", (data) => {
-    //     console.log(`User left room with id ${data.id}`);
-    //     socket.leave(data.id);
-    //   });
+      socket.on("message", ({ conversationId, message }) => {
+        const user = (socket as any).user;
 
-    //   socket.on("connect_error", (err) => {
-    //     console.log(`connect_error due to ${err.message}`);
-    //   });
+        ConversationModel.findByIdAndUpdate(conversationId, {
+          $push: {
+            messages: { text: message, sentBy: user._id, seen: false },
+          },
+        }).then(() => {
+          io.to(conversationId).emit("messageChange", {
+            conversationId,
+          });
+        });
+      });
 
-    //   socket.on("message", ({ conversationId, message }) => {
-    //     Conversation.findByIdAndUpdate(conversationId, {
-    //       $push: {
-    //         messages: { text: message, sentBy: socket.user._id, seen: false },
-    //       },
-    //     }).then(() => {
-    //       io.to(conversationId).emit("message_change", {
-    //         text: message,
-    //         sentBy: socket.user._id,
-    //       });
-    //     });
-    //   });
-
-    //   //watches the collection for any inserted documents
-    //   function startWatcher() {
-    //     Notification.watch()
-    //       .on("change", (change) => {
-    //         if (change.operationType == "insert") {
-    //           socket
-    //             .to(change.fullDocument.reciever.toString())
-    //             .emit("changes", JSON.stringify(change.fullDocument));
-    //         }
-    //       })
-    //       .on("error", (e) => {
-    //         //restart new watcher
-    //         startWatcher();
-    //       });
-    //   }
-    //   startWatcher();
-    // });
+      // Watches the collection for any inserted documents
+      function startWatcher() {
+        NotificationModel.watch()
+          .on("change", (change) => {
+            if (change.operationType === "insert") {
+              socket
+                .to(change.fullDocument.reciever.toString())
+                .emit("notificationChange");
+            }
+          })
+          .on("error", (e) => {
+            // Restart new watcher
+            startWatcher();
+          });
+      }
+      startWatcher();
+    });
   })
   .catch((err) => {
     throw err;
